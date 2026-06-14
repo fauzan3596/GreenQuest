@@ -2,6 +2,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 import os
+import time
 from tracker import CarbonTracker
 from gemini_integration import GeminiAdvisor
 
@@ -87,7 +88,12 @@ with tab1:
 
 with tab2:
     st.subheader("Catat Aktivitas Baru")
-    with st.form("activity_form"):
+    
+    # Inisialisasi daftar sementara untuk batch upload
+    if 'temp_activities' not in st.session_state:
+        st.session_state.temp_activities = []
+    
+    with st.form("activity_form", clear_on_submit=True):
         col_a, col_b = st.columns(2)
         with col_a:
             act_type = st.selectbox("Tipe Aktivitas", 
@@ -96,14 +102,48 @@ with tab2:
         with col_b:
             amount = st.number_input("Jumlah (kWh/liter/kg/km)", min_value=0.0, step=0.1)
         
-        submitted = st.form_submit_button("Simpan Aktivitas")
-        if submitted:
-            success, result = tracker.add_activity(act_type, amount)
-            if success:
-                st.success(f"Tersimpan! Emisi baru: {result:.2f} kg CO2")
-                st.rerun()
+        add_to_list = st.form_submit_button("Tambah ke Daftar Sementara")
+        if add_to_list:
+            if amount > 0:
+                emission = amount * tracker.factors[act_type]
+                st.session_state.temp_activities.append({
+                    "type": act_type,
+                    "amount": amount,
+                    "emission": emission
+                })
+                st.toast(f"✅ {act_type.capitalize()} ditambahkan ke daftar!", icon="➕")
             else:
-                st.error(result)
+                st.error("Jumlah harus lebih dari 0.")
+
+    # Tampilkan daftar sementara jika ada
+    if st.session_state.temp_activities:
+        st.write("### 📋 Daftar Aktivitas Sementara")
+        df_temp = pd.DataFrame(st.session_state.temp_activities)
+        # Format kolom agar lebih rapi
+        df_temp.columns = ["Tipe", "Jumlah", "Emisi (kg CO2)"]
+        st.table(df_temp)
+        
+        col_submit, col_cancel = st.columns([1, 4])
+        with col_submit:
+            if st.button("Submit Semua Data", type="primary"):
+                count = 0
+                for act in st.session_state.temp_activities:
+                    success, result = tracker.add_activity(act["type"], act["amount"])
+                    if success:
+                        count += 1
+                
+                st.session_state.temp_activities = []
+                st.success(f"Berhasil menyimpan {count} aktivitas ke riwayat!")
+                st.balloons()
+                time.sleep(2)
+                st.rerun()
+        
+        with col_cancel:
+            if st.button("Kosongkan Daftar"):
+                st.session_state.temp_activities = []
+                st.rerun()
+    else:
+        st.info("Belum ada aktivitas di daftar sementara. Masukkan data di atas dan klik 'Tambah ke Daftar Sementara'.")
 
 with tab3:
     st.subheader("Chat dengan EarthBot AI")
