@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+import os
 from tracker import CarbonTracker
 from gemini_integration import GeminiAdvisor
 
@@ -18,16 +19,26 @@ st.markdown("Monitor emisi karbon harianmu dan dapatkan saran cerdas dari EarthB
 # Sidebar untuk API Key dan Info
 with st.sidebar:
     st.header("Konfigurasi")
-    api_key = st.text_input("Gemini API Key", type="password", help="Dapatkan di Google AI Studio")
+    
+    # Coba ambil API Key dari Secrets (Streamlit Cloud) atau Env Var sebagai default
+    default_api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
+    
+    api_key = st.text_input(
+        "Gemini API Key", 
+        value=default_api_key,
+        type="password", 
+        help="Dapatkan di Google AI Studio. Jika sudah diatur oleh pengembang, Anda bisa membiarkannya."
+    )
+    
     if api_key:
-        st.success("API Key Terpasang")
+        st.success("API Key Aktif")
     else:
         st.warning("Gunakan API Key untuk fitur ChatBot AI")
     
     st.divider()
     st.header("Manajemen Data")
     if st.button("Reset Semua Data", help="Hapus semua riwayat emisi"):
-        tracker.clear_data()
+        st.session_state.tracker.clear_data()
         st.success("Data berhasil dikosongkan!")
         st.rerun()
     
