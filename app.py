@@ -20,20 +20,26 @@ st.markdown("Monitor emisi karbon harianmu dan dapatkan saran cerdas dari EarthB
 with st.sidebar:
     st.header("Konfigurasi")
     
-    # Coba ambil API Key dari Secrets (Streamlit Cloud) atau Env Var sebagai default
-    default_api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
+    # Coba ambil API Key dari Secrets atau Env Var sebagai fallback (tidak ditampilkan di UI)
+    secret_api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
     
-    api_key = st.text_input(
-        "Gemini API Key", 
-        value=default_api_key,
+    user_api_key = st.text_input(
+        "Gemini API Key (Opsional)", 
         type="password", 
-        help="Dapatkan di Google AI Studio. Jika sudah diatur oleh pengembang, Anda bisa membiarkannya."
+        placeholder="Kosongkan untuk menggunakan kunci default pengembang",
+        help="Masukkan API Key pribadi Anda jika ingin. Jika kosong, aplikasi akan menggunakan kunci default yang sudah diatur pengembang secara aman."
     )
     
-    if api_key:
-        st.success("API Key Aktif")
+    # Logika penentuan API Key yang digunakan
+    active_api_key = user_api_key if user_api_key else secret_api_key
+    
+    if active_api_key:
+        if user_api_key:
+            st.success("Menggunakan API Key Pribadi")
+        else:
+            st.success("Menggunakan API Key Default (Aman)")
     else:
-        st.warning("Gunakan API Key untuk fitur ChatBot AI")
+        st.warning("API Key tidak ditemukan. Fitur AI tidak akan berfungsi.")
     
     st.divider()
     st.header("Manajemen Data")
@@ -69,15 +75,15 @@ with tab1:
 
     with col2:
         st.write("### 💡 Analisis EarthBot AI")
-        if api_key:
+        if active_api_key:
             if st.button("Generate AI Analysis"):
-                advisor = GeminiAdvisor(api_key)
+                advisor = GeminiAdvisor(active_api_key)
                 summary_text = "\n".join([f"{k}: {v:.2f} kg CO2" for k, v in summary.items()])
                 with st.spinner("EarthBot sedang berpikir..."):
                     advice = advisor.get_ai_advice(summary_text)
                     st.markdown(advice)
         else:
-            st.info("Masukkan API Key di sidebar untuk mendapatkan analisis AI yang dipersonalisasi.")
+            st.info("API Key diperlukan untuk analisis AI.")
 
 with tab2:
     st.subheader("Catat Aktivitas Baru")
@@ -101,10 +107,10 @@ with tab2:
 
 with tab3:
     st.subheader("Chat dengan EarthBot AI")
-    if not api_key:
-        st.error("Silakan masukkan API Key Gemini di sidebar untuk mulai mengobrol.")
+    if not active_api_key:
+        st.error("API Key tidak ditemukan. Fitur chat dinonaktifkan.")
     else:
-        advisor = GeminiAdvisor(api_key)
+        advisor = GeminiAdvisor(active_api_key)
         
         # Display chat history
         for message in st.session_state.chat_history:
