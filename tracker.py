@@ -18,8 +18,14 @@ class CarbonTracker:
 
     def _load_data(self):
         if os.path.exists(self.data_file):
-            with open(self.data_file, 'r') as f:
-                return json.load(f)
+            try:
+                with open(self.data_file, 'r') as f:
+                    content = f.read().strip()
+                    if not content:
+                        return []
+                    return json.loads(content)
+            except (json.JSONDecodeError, IOError):
+                return []
         return []
 
     def _save_data(self):

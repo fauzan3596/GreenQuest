@@ -1,1 +1,7 @@
-[`]
+[
+    {
+        "type": "meat",
+        "amount": 2,
+        "emission": 30.0
+    }
+]
