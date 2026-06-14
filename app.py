@@ -25,6 +25,13 @@ with st.sidebar:
         st.warning("Gunakan API Key untuk fitur ChatBot AI")
     
     st.divider()
+    st.header("Manajemen Data")
+    if st.button("Reset Semua Data", help="Hapus semua riwayat emisi"):
+        tracker.clear_data()
+        st.success("Data berhasil dikosongkan!")
+        st.rerun()
+    
+    st.divider()
     st.info("GreenQuest membantu Anda menjaga bumi dengan melacak emisi dari aktivitas harian.")
 
 # Main Tabs

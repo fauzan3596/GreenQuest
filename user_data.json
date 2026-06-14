@@ -1,7 +1,27 @@
 [
     {
+        "type": "electricity",
+        "amount": 150.0,
+        "emission": 75.0
+    },
+    {
         "type": "meat",
-        "amount": 2,
-        "emission": 30.0
+        "amount": 2.5,
+        "emission": 37.5
+    },
+    {
+        "type": "petrol",
+        "amount": 20.0,
+        "emission": 46.0
+    },
+    {
+        "type": "public_transport",
+        "amount": 50.0,
+        "emission": 2.5
+    },
+    {
+        "type": "electricity",
+        "amount": 80.0,
+        "emission": 40.0
     }
 ]

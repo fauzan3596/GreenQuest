@@ -32,6 +32,11 @@ class CarbonTracker:
         with open(self.data_file, 'w') as f:
             json.dump(self.logs, f, indent=4)
 
+    def clear_data(self):
+        self.logs = []
+        self._save_data()
+        return True
+
     def add_activity(self, activity_type, amount):
         if activity_type not in self.factors:
             return False, "Tipe aktivitas tidak valid."
